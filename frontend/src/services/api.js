@@ -3,8 +3,8 @@ import { storage } from '../utils/helpers';
 
 // Create axios instance
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
-    timeout: 10000,
+    baseURL: process.env.REACT_APP_API_URL || 'https://mini-financial-trading-app-backend.onrender.com/api',
+    timeout: 30000, // Increased timeout for Render cold starts
 });
 
 // Request interceptor to add auth token

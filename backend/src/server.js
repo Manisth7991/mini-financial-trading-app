@@ -30,7 +30,11 @@ const app = express();
 // CORS - Must be first to handle preflight requests
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://your-frontend-domain.com']
+        ? [
+            'https://mini-financial-trading-app.vercel.app',
+            'https://mini-financial-trading-app-git-main.vercel.app',
+            /^https:\/\/.*\.vercel\.app$/
+        ]
         : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

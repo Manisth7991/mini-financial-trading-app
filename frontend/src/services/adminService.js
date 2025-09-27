@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { storage } from '../utils/helpers';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://mini-financial-trading-app-backend.onrender.com/api';
 
 // Create axios instance with default config
 const adminApi = axios.create({
     baseURL: `${API_URL}/admin`,
+    timeout: 30000, // Increased timeout for Render cold starts
     headers: {
         'Content-Type': 'application/json',
     },
