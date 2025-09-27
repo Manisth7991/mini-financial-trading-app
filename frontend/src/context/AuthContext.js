@@ -10,6 +10,7 @@ const initialState = {
     loading: true,
     error: null,
     isInitialized: false,
+    signupSuccess: false,
 };
 
 // Action types
@@ -36,12 +37,12 @@ const authReducer = (state, action) => {
                 ...state,
                 loading: true,
                 error: null,
+                signupSuccess: false,
             };
 
         case ActionTypes.LOGIN_SUCCESS:
-        case ActionTypes.SIGNUP_SUCCESS:
-            console.log('AuthReducer: Processing LOGIN/SIGNUP_SUCCESS with payload:', action.payload);
-            const newState = {
+            console.log('AuthReducer: Processing LOGIN_SUCCESS with payload:', action.payload);
+            const loginState = {
                 ...state,
                 user: action.payload.user,
                 token: action.payload.token,
@@ -51,13 +52,32 @@ const authReducer = (state, action) => {
                 isInitialized: true,
             };
             console.log('AuthReducer: New authenticated state:', {
-                isAuthenticated: newState.isAuthenticated,
-                user: newState.user?.email,
-                hasToken: !!newState.token
+                isAuthenticated: loginState.isAuthenticated,
+                user: loginState.user?.email,
+                hasToken: !!loginState.token
             });
-            return newState;
+            return loginState;
+
+        case ActionTypes.SIGNUP_SUCCESS:
+            console.log('AuthReducer: Processing SIGNUP_SUCCESS - account created, redirecting to login');
+            return {
+                ...state,
+                loading: false,
+                error: null,
+                signupSuccess: true,
+                isInitialized: true,
+            };
 
         case ActionTypes.LOGIN_FAILURE:
+            return {
+                ...state,
+                user: null,
+                token: null,
+                isAuthenticated: false,
+                loading: false,
+                error: action.payload,
+            };
+
         case ActionTypes.SIGNUP_FAILURE:
             return {
                 ...state,
@@ -66,6 +86,7 @@ const authReducer = (state, action) => {
                 isAuthenticated: false,
                 loading: false,
                 error: action.payload,
+                signupSuccess: false,
             };
 
         case ActionTypes.LOGOUT:
@@ -222,16 +243,14 @@ export const AuthProvider = ({ children }) => {
 
             const { token, user } = response.data.data;
 
-            // Store in localStorage
-            storage.set('token', token);
-            storage.set('user', user);
-            console.log('AuthContext: Successfully stored token and user in localStorage');
+            // Don't store in localStorage - user needs to login after signup
+            console.log('AuthContext: Account created successfully, user needs to login');
 
             dispatch({
                 type: ActionTypes.SIGNUP_SUCCESS,
-                payload: { token, user },
+                payload: { message: 'Account created successfully' },
             });
-            console.log('AuthContext: Successfully dispatched SIGNUP_SUCCESS');
+            console.log('AuthContext: Successfully dispatched SIGNUP_SUCCESS - redirecting to login');
 
             return response;
         } catch (error) {

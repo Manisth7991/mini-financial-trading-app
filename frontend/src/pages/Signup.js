@@ -7,7 +7,7 @@ import { validatePAN, validateEmail } from '../utils/helpers';
 
 const Signup = () => {
     const navigate = useNavigate();
-    const { signup, loading, clearError, isAuthenticated } = useAuth();
+    const { signup, loading, clearError, isAuthenticated, signupSuccess } = useAuth();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -21,13 +21,21 @@ const Signup = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Redirect to dashboard if authenticated after signup
+    // Redirect authenticated users to dashboard
     useEffect(() => {
         if (isAuthenticated && !loading) {
-            console.log('Signup.js: User authenticated, redirecting to dashboard');
+            console.log('Signup.js: User already authenticated, redirecting to dashboard');
             navigate('/dashboard', { replace: true });
         }
     }, [isAuthenticated, loading, navigate]);
+
+    // Redirect to login if signup is successful
+    useEffect(() => {
+        if (signupSuccess && !loading) {
+            console.log('Signup.js: Account created successfully, redirecting to login');
+            navigate('/login', { replace: true });
+        }
+    }, [signupSuccess, loading, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -144,7 +152,7 @@ const Signup = () => {
                 panNumber: '',
             });
             setIdImage(null);
-            // Navigation will be handled by useEffect watching isAuthenticated
+            // Navigation will be handled by useEffect watching signupSuccess
         } catch (error) {
             toast.error(error.response?.data?.message || 'Signup failed');
         }
