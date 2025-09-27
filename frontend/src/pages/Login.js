@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Lock, Mail, LogIn } from 'lucide-react';
@@ -7,16 +7,28 @@ import { useAuth } from '../context/AuthContext';
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { login, loading, clearError } = useAuth();
+    const { login, loading, clearError, isAuthenticated } = useAuth();
 
     const [formData, setFormData] = useState({
         email: '',
         password: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     // Get redirect path from location state
     const from = location.state?.from?.pathname || '/dashboard';
+
+    // Redirect to dashboard if already authenticated (for users who refresh the page while logged in)
+    useEffect(() => {
+        console.log('Login.js: Initial auth check - isAuthenticated:', isAuthenticated, 'loading:', loading);
+
+        // Only redirect if user is already authenticated when component mounts (not during login process)
+        if (isAuthenticated && !loading && !isLoggingIn) {
+            console.log('Login.js: User already authenticated, redirecting to:', from);
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, loading, navigate, from, isLoggingIn]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,13 +41,29 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoggingIn(true);
 
         try {
-            await login(formData);
+            const response = await login(formData);
+            console.log('Login.js: Login successful, response:', response);
+
+            // Clear form on successful login
+            setFormData({
+                email: '',
+                password: '',
+            });
+
             toast.success('Login successful!');
+
+            // Navigate immediately after successful login
+            console.log('Login.js: Navigating to dashboard immediately');
             navigate(from, { replace: true });
+
         } catch (error) {
+            console.error('Login.js: Login failed:', error);
             toast.error(error.response?.data?.message || 'Login failed');
+        } finally {
+            setIsLoggingIn(false);
         }
     };
 

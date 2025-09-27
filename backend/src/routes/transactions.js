@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const Portfolio = require('../models/Portfolio');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
-const { asyncHandler } = require('../utils/helpers');
+const { asyncHandler, generateTransactionId } = require('../utils/helpers');
 
 const router = express.Router();
 
@@ -17,8 +17,11 @@ router.use(authenticateToken);
 router.post('/buy', asyncHandler(async (req, res) => {
     const { productId, units } = req.body;
 
+    console.log('Buy transaction request:', { productId, units, userId: req.user.id });
+
     // Validate input
     if (!productId || !units || units <= 0) {
+        console.log('Buy transaction: Invalid input validation failed');
         return res.status(400).json({
             success: false,
             message: 'Please provide valid product ID and units'
@@ -59,6 +62,9 @@ router.post('/buy', asyncHandler(async (req, res) => {
         );
 
         // Create transaction record
+        const transactionId = generateTransactionId();
+        console.log('Buy transaction: Creating transaction with ID:', transactionId);
+
         const transaction = await Transaction.create([{
             user: req.user.id,
             product: productId,
@@ -66,6 +72,7 @@ router.post('/buy', asyncHandler(async (req, res) => {
             units,
             pricePerUnit: product.pricePerUnit,
             totalAmount,
+            transactionId: transactionId,
             status: 'completed'
         }], { session });
 
@@ -103,9 +110,12 @@ router.post('/buy', asyncHandler(async (req, res) => {
         }
 
         await session.commitTransaction();
+        console.log('Buy transaction: Transaction committed successfully');
 
         // Get updated user balance
         const updatedUser = await User.findById(req.user.id);
+
+        console.log('Buy transaction: Purchase completed for user:', req.user.id, 'New balance:', updatedUser.walletBalance);
 
         res.status(201).json({
             success: true,

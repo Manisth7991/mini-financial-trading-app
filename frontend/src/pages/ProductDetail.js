@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
@@ -8,7 +8,6 @@ import {
     TrendingUp,
     TrendingDown,
     Info,
-    Calendar,
     BarChart3
 } from 'lucide-react';
 import {
@@ -52,21 +51,7 @@ const ProductDetail = () => {
         { value: '1Y', label: '1Y' },
     ];
 
-    useEffect(() => {
-        if (id) {
-            fetchProduct();
-            fetchChartData();
-            checkWatchlistStatus();
-        }
-    }, [id]);
-
-    useEffect(() => {
-        if (id && period) {
-            fetchChartData();
-        }
-    }, [period]);
-
-    const fetchProduct = async () => {
+    const fetchProduct = useCallback(async () => {
         setLoading(true);
         try {
             const response = await productService.getProduct(id);
@@ -77,9 +62,9 @@ const ProductDetail = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id, navigate]);
 
-    const fetchChartData = async () => {
+    const fetchChartData = useCallback(async () => {
         setChartLoading(true);
         try {
             const response = await productService.getProductChart(id, period);
@@ -93,16 +78,30 @@ const ProductDetail = () => {
         } finally {
             setChartLoading(false);
         }
-    };
+    }, [id, period]);
 
-    const checkWatchlistStatus = async () => {
+    const checkWatchlistStatus = useCallback(async () => {
         try {
             const response = await watchlistService.checkWatchlist(id);
             setIsInWatchlist(response.data.inWatchlist);
         } catch (error) {
             console.error('Error checking watchlist status:', error);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            fetchProduct();
+            fetchChartData();
+            checkWatchlistStatus();
+        }
+    }, [id, fetchProduct, fetchChartData, checkWatchlistStatus]);
+
+    useEffect(() => {
+        if (id && period) {
+            fetchChartData();
+        }
+    }, [period, id, fetchChartData]);
 
     const handleWatchlistToggle = async () => {
         try {
@@ -269,8 +268,8 @@ const ProductDetail = () => {
                                         key={value}
                                         onClick={() => setPeriod(value)}
                                         className={`px-3 py-1 text-sm rounded-lg transition-colors duration-200 ${period === value
-                                                ? 'bg-primary-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
                                         {label}

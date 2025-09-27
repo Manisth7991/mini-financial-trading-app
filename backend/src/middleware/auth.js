@@ -14,6 +14,10 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
+        // Debug: Log token details (first few chars only for security)
+        console.log('Auth middleware: Token received:', token.substring(0, 20) + '...');
+        console.log('Auth middleware: JWT_SECRET exists:', !!process.env.JWT_SECRET);
+
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 

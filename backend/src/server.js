@@ -1,9 +1,15 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
+
+console.log('Environment variables check:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Loaded' : 'UNDEFINED');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Loaded' : 'UNDEFINED');
 
 const connectDB = require('./utils/database');
 const errorHandler = require('./middleware/errorHandler');
@@ -20,13 +26,25 @@ connectDB();
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// CORS - Must be first to handle preflight requests
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production'
+        ? ['https://your-frontend-domain.com']
+        : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+}));
 
-// Rate limiting
+// Security middleware
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Rate limiting - Relaxed for development
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
     message: {
         success: false,
         message: 'Too many requests from this IP, please try again later.'
@@ -34,24 +52,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Stricter rate limiting for auth routes
+// Stricter rate limiting for auth routes - Relaxed for development
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 requests per windowMs
+    max: 200, // limit each IP to 200 requests per windowMs (increased for development)
     message: {
         success: false,
         message: 'Too many authentication attempts, please try again later.'
     }
 });
 app.use('/api/auth', authLimiter);
-
-// CORS
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://your-frontend-domain.com']
-        : ['http://localhost:3000'],
-    credentials: true
-}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -99,8 +109,10 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`Server listening on http://localhost:${PORT}`);
+    console.log(`API available at http://localhost:${PORT}/api`);
 });
 
 // Handle unhandled promise rejections

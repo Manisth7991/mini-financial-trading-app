@@ -9,7 +9,6 @@ import {
     Eye,
     ShoppingCart,
     Heart,
-    Calendar,
     Briefcase
 } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';

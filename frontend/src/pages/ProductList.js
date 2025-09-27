@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Search, Filter, Heart, TrendingUp, TrendingDown } from 'lucide-react';
@@ -9,18 +9,18 @@ const ProductCard = ({ product, onWatchlistToggle }) => {
     const [isInWatchlist, setIsInWatchlist] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        checkWatchlistStatus();
-    }, [product._id]);
-
-    const checkWatchlistStatus = async () => {
+    const checkWatchlistStatus = useCallback(async () => {
         try {
             const response = await watchlistService.checkWatchlist(product._id);
             setIsInWatchlist(response.data.inWatchlist);
         } catch (error) {
             console.error('Error checking watchlist status:', error);
         }
-    };
+    }, [product._id]);
+
+    useEffect(() => {
+        checkWatchlistStatus();
+    }, [checkWatchlistStatus]);
 
     const handleWatchlistToggle = async () => {
         setLoading(true);
@@ -77,8 +77,8 @@ const ProductCard = ({ product, onWatchlistToggle }) => {
                     onClick={handleWatchlistToggle}
                     disabled={loading}
                     className={`p-2 rounded-full transition-colors duration-200 ${isInWatchlist
-                            ? 'text-red-600 hover:bg-red-50'
-                            : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                         }`}
                 >
                     <Heart className={`h-5 w-5 ${isInWatchlist ? 'fill-current' : ''}`} />
@@ -157,14 +157,6 @@ const ProductList = () => {
         pages: 0,
     });
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        fetchProducts();
-    }, [filters, pagination.page]);
-
     const fetchCategories = async () => {
         try {
             const response = await productService.getCategories();
@@ -174,7 +166,7 @@ const ProductList = () => {
         }
     };
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const response = await productService.getProducts({
@@ -193,7 +185,15 @@ const ProductList = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, pagination.page, pagination.limit]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 
 // Context
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,6 +15,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
+import ClearTokens from './pages/ClearTokens';
 
 // Layouts
 const AuthLayout = ({ children }) => (
@@ -30,10 +31,30 @@ const AppLayout = ({ children }) => (
     </div>
 );
 
+// Root redirect component that properly handles authentication
+const RootRedirect = () => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+        );
+    }
+
+    return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+};
+
 function App() {
     return (
         <AuthProvider>
-            <Router>
+            <Router
+                future={{
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true
+                }}
+            >
                 <div className="App">
                     <Routes>
                         {/* Public Routes */}
@@ -50,6 +71,14 @@ function App() {
                             element={
                                 <AuthLayout>
                                     <Signup />
+                                </AuthLayout>
+                            }
+                        />
+                        <Route
+                            path="/clear-tokens"
+                            element={
+                                <AuthLayout>
+                                    <ClearTokens />
                                 </AuthLayout>
                             }
                         />
@@ -87,8 +116,8 @@ function App() {
                         />
 
                         {/* Default redirects */}
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/" element={<RootRedirect />} />
+                        <Route path="*" element={<RootRedirect />} />
                     </Routes>
 
                     {/* Toast notifications */}

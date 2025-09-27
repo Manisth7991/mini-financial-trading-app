@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Lock, Mail, User, CreditCard, Upload, UserPlus } from 'lucide-react';
@@ -7,7 +7,7 @@ import { validatePAN, validateEmail } from '../utils/helpers';
 
 const Signup = () => {
     const navigate = useNavigate();
-    const { signup, loading, clearError } = useAuth();
+    const { signup, loading, clearError, isAuthenticated } = useAuth();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -21,11 +21,23 @@ const Signup = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
 
+    // Redirect to dashboard if authenticated after signup
+    useEffect(() => {
+        if (isAuthenticated && !loading) {
+            console.log('Signup.js: User authenticated, redirecting to dashboard');
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, loading, navigate]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Only convert PAN number to uppercase, keep other fields as entered
+        const processedValue = name === 'panNumber' ? value.toUpperCase() : value;
+
         setFormData(prev => ({
             ...prev,
-            [name]: value.toUpperCase(),
+            [name]: processedValue,
         }));
 
         // Clear specific error when user starts typing
@@ -123,7 +135,16 @@ const Signup = () => {
         try {
             await signup(submitData);
             toast.success('Account created successfully!');
-            navigate('/dashboard');
+            // Clear form on successful signup
+            setFormData({
+                name: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+                panNumber: '',
+            });
+            setIdImage(null);
+            // Navigation will be handled by useEffect watching isAuthenticated
         } catch (error) {
             toast.error(error.response?.data?.message || 'Signup failed');
         }

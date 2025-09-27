@@ -5,7 +5,6 @@ import {
     TrendingUp,
     Briefcase,
     Heart,
-    Settings,
     LogOut,
     User,
     Wallet
@@ -51,8 +50,8 @@ const Navbar = () => {
                                     key={path}
                                     to={path}
                                     className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200 ${location.pathname === path
-                                            ? 'text-primary-600 border-b-2 border-primary-600'
-                                            : 'text-gray-500 hover:text-gray-700'
+                                        ? 'text-primary-600 border-b-2 border-primary-600'
+                                        : 'text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     <Icon className="h-4 w-4 mr-2" />
@@ -106,8 +105,8 @@ const Navbar = () => {
                             key={path}
                             to={path}
                             className={`flex flex-col items-center py-2 px-3 text-xs transition-colors duration-200 ${location.pathname === path
-                                    ? 'text-primary-600'
-                                    : 'text-gray-500'
+                                ? 'text-primary-600'
+                                : 'text-gray-500'
                                 }`}
                         >
                             <Icon className="h-5 w-5 mb-1" />

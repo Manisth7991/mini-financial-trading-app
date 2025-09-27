@@ -1,25 +1,83 @@
 // Format currency to Indian Rupees
 export const formatCurrency = (amount) => {
+    // Handle null, undefined, or non-numeric values
+    if (amount === null || amount === undefined || isNaN(amount)) {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+        }).format(0);
+    }
+
+    // Convert to number if it's a string
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+    // Check again after conversion
+    if (isNaN(numAmount)) {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+        }).format(0);
+    }
+
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
-    }).format(amount);
+    }).format(numAmount);
 };
 
 // Format number with Indian number system
 export const formatNumber = (num) => {
-    return new Intl.NumberFormat('en-IN').format(num);
+    // Handle null, undefined, or non-numeric values
+    if (num === null || num === undefined || isNaN(num)) {
+        return new Intl.NumberFormat('en-IN').format(0);
+    }
+
+    // Convert to number if it's a string
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+
+    // Check again after conversion
+    if (isNaN(numValue)) {
+        return new Intl.NumberFormat('en-IN').format(0);
+    }
+
+    return new Intl.NumberFormat('en-IN').format(numValue);
 };
 
 // Format percentage
 export const formatPercentage = (percentage) => {
-    const sign = percentage >= 0 ? '+' : '';
-    return `${sign}${percentage.toFixed(2)}%`;
+    // Handle null, undefined, or non-numeric values
+    if (percentage === null || percentage === undefined || isNaN(percentage)) {
+        return '0.00%';
+    }
+
+    // Convert to number if it's a string
+    const numPercentage = typeof percentage === 'string' ? parseFloat(percentage) : percentage;
+
+    // Check again after conversion
+    if (isNaN(numPercentage)) {
+        return '0.00%';
+    }
+
+    const sign = numPercentage >= 0 ? '+' : '';
+    return `${sign}${numPercentage.toFixed(2)}%`;
 };
 
 // Get percentage color class
 export const getPercentageColor = (percentage) => {
-    return percentage >= 0 ? 'text-success-600' : 'text-danger-600';
+    // Handle null, undefined, or non-numeric values
+    if (percentage === null || percentage === undefined || isNaN(percentage)) {
+        return 'text-gray-500';
+    }
+
+    // Convert to number if it's a string
+    const numPercentage = typeof percentage === 'string' ? parseFloat(percentage) : percentage;
+
+    // Check again after conversion
+    if (isNaN(numPercentage)) {
+        return 'text-gray-500';
+    }
+
+    return numPercentage >= 0 ? 'text-success-600' : 'text-danger-600';
 };
 
 // Format date

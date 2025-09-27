@@ -13,14 +13,23 @@ router.use(authenticateToken);
 // @desc    Get user's watchlist
 // @access  Private
 router.get('/', asyncHandler(async (req, res) => {
-    const watchlist = await Watchlist.find({ user: req.user.id })
-        .populate('product', 'name symbol category pricePerUnit yearHigh yearLow peRatio sector')
-        .sort({ addedAt: -1 });
+    console.log('Watchlist route: Getting watchlist for user:', req.user.id);
 
-    res.json({
-        success: true,
-        data: { watchlist }
-    });
+    try {
+        const watchlist = await Watchlist.find({ user: req.user.id })
+            .populate('product', 'name symbol category pricePerUnit yearHigh yearLow peRatio sector')
+            .sort({ addedAt: -1 });
+
+        console.log('Watchlist route: Found', watchlist.length, 'items');
+
+        res.json({
+            success: true,
+            data: { watchlist }
+        });
+    } catch (error) {
+        console.error('Watchlist route error:', error);
+        throw error;
+    }
 }));
 
 // @route   POST /api/watchlist/add/:productId
@@ -30,9 +39,14 @@ router.post('/add/:productId', asyncHandler(async (req, res) => {
     const { productId } = req.params;
     const { notes } = req.body;
 
+    console.log('Add to watchlist: productId:', productId, 'user:', req.user.id);
+
     // Check if product exists
     const product = await Product.findById(productId);
+    console.log('Add to watchlist: Product found:', !!product, 'isActive:', product?.isActive);
+
     if (!product || !product.isActive) {
+        console.log('Add to watchlist: Product not found or inactive');
         return res.status(404).json({
             success: false,
             message: 'Product not found'

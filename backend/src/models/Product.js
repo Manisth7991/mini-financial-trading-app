@@ -92,12 +92,12 @@ productSchema.pre('save', function (next) {
 
 // Virtual for current return percentage
 productSchema.virtual('returnPercentage').get(function () {
-    if (this.historicalPrices.length < 2) return 0;
+    if (!this.historicalPrices || this.historicalPrices.length < 2) return 0;
 
     const firstPrice = this.historicalPrices[0].price;
     const currentPrice = this.pricePerUnit;
 
-    return ((currentPrice - firstPrice) / firstPrice * 100).toFixed(2);
+    return parseFloat(((currentPrice - firstPrice) / firstPrice * 100).toFixed(2));
 });
 
 // Ensure virtual fields are serialized

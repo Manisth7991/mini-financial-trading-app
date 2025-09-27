@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { authService } from '../services';
 import { storage } from '../utils/helpers';
 
@@ -9,6 +9,7 @@ const initialState = {
     isAuthenticated: false,
     loading: true,
     error: null,
+    isInitialized: false,
 };
 
 // Action types
@@ -27,6 +28,7 @@ const ActionTypes = {
 
 // Reducer
 const authReducer = (state, action) => {
+    console.log('AuthReducer: Action type:', action.type, 'Payload:', action.payload);
     switch (action.type) {
         case ActionTypes.LOGIN_START:
         case ActionTypes.SIGNUP_START:
@@ -38,14 +40,22 @@ const authReducer = (state, action) => {
 
         case ActionTypes.LOGIN_SUCCESS:
         case ActionTypes.SIGNUP_SUCCESS:
-            return {
+            console.log('AuthReducer: Processing LOGIN/SIGNUP_SUCCESS with payload:', action.payload);
+            const newState = {
                 ...state,
                 user: action.payload.user,
                 token: action.payload.token,
                 isAuthenticated: true,
                 loading: false,
                 error: null,
+                isInitialized: true,
             };
+            console.log('AuthReducer: New authenticated state:', {
+                isAuthenticated: newState.isAuthenticated,
+                user: newState.user?.email,
+                hasToken: !!newState.token
+            });
+            return newState;
 
         case ActionTypes.LOGIN_FAILURE:
         case ActionTypes.SIGNUP_FAILURE:
@@ -59,14 +69,19 @@ const authReducer = (state, action) => {
             };
 
         case ActionTypes.LOGOUT:
-            return {
-                ...state,
-                user: null,
-                token: null,
-                isAuthenticated: false,
-                loading: false,
-                error: null,
-            };
+            // Only update if not already logged out to prevent unnecessary re-renders
+            if (state.isAuthenticated || state.loading) {
+                return {
+                    ...state,
+                    user: null,
+                    token: null,
+                    isAuthenticated: false,
+                    loading: false,
+                    error: null,
+                    isInitialized: true,
+                };
+            }
+            return state;
 
         case ActionTypes.LOAD_USER:
             return {
@@ -76,13 +91,18 @@ const authReducer = (state, action) => {
                 isAuthenticated: true,
                 loading: false,
                 error: null,
+                isInitialized: true,
             };
 
         case ActionTypes.CLEAR_ERROR:
-            return {
-                ...state,
-                error: null,
-            };
+            // Only update if there's actually an error to clear
+            if (state.error) {
+                return {
+                    ...state,
+                    error: null,
+                };
+            }
+            return state;
 
         case ActionTypes.UPDATE_WALLET:
             return {
@@ -104,45 +124,76 @@ const AuthContext = createContext();
 // Auth provider component
 export const AuthProvider = ({ children }) => {
     const [state, dispatch] = useReducer(authReducer, initialState);
+    const isInitialized = useRef(false);
 
     // Load user from localStorage on mount
     useEffect(() => {
-        const loadUser = () => {
-            const token = storage.get('token');
-            const user = storage.get('user');
+        // Prevent multiple initializations
+        if (isInitialized.current) {
+            console.log('AuthContext: Already initialized, skipping');
+            return;
+        }
 
-            if (token && user) {
-                dispatch({
-                    type: ActionTypes.LOAD_USER,
-                    payload: { user, token },
-                });
-            } else {
-                dispatch({ type: ActionTypes.LOGOUT });
-            }
-        };
+        console.log('AuthContext: Initial load - checking localStorage');
+        isInitialized.current = true;
 
-        loadUser();
-    }, []);
+        const token = storage.get('token');
+        const user = storage.get('user');
+
+        console.log('AuthContext: Token exists:', !!token);
+        console.log('AuthContext: User exists:', !!user);
+
+        if (token && user) {
+            console.log('AuthContext: Loading existing user session');
+            dispatch({
+                type: ActionTypes.LOAD_USER,
+                payload: { user, token },
+            });
+        } else {
+            console.log('AuthContext: No existing session, setting to logged out');
+            dispatch({ type: ActionTypes.LOGOUT });
+        }
+    }, []); // Empty dependency array to run only once
 
     // Login function
     const login = async (credentials) => {
+        console.log('AuthContext: Starting login process with credentials:', {
+            email: credentials.email,
+            passwordLength: credentials.password?.length
+        });
         dispatch({ type: ActionTypes.LOGIN_START });
 
         try {
             const response = await authService.login(credentials);
+            console.log('AuthContext: Login API response:', {
+                success: response.data?.success,
+                hasToken: !!response.data?.data?.token,
+                hasUser: !!response.data?.data?.user
+            });
+
+            // Validate response structure
+            if (!response.data?.success || !response.data?.data?.token || !response.data?.data?.user) {
+                throw new Error('Invalid response format from server');
+            }
+
+            const { token, user } = response.data.data;
 
             // Store in localStorage
-            storage.set('token', response.data.token);
-            storage.set('user', response.data.user);
+            storage.set('token', token);
+            storage.set('user', user);
+            console.log('AuthContext: Successfully stored token and user in localStorage');
 
+            // Dispatch success action
             dispatch({
                 type: ActionTypes.LOGIN_SUCCESS,
-                payload: response.data,
+                payload: { token, user },
             });
+            console.log('AuthContext: Successfully dispatched LOGIN_SUCCESS');
 
             return response;
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Login failed';
+            console.error('AuthContext: Login error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Login failed';
             dispatch({
                 type: ActionTypes.LOGIN_FAILURE,
                 payload: errorMessage,
@@ -153,23 +204,39 @@ export const AuthProvider = ({ children }) => {
 
     // Signup function
     const signup = async (formData) => {
+        console.log('AuthContext: Starting signup process');
         dispatch({ type: ActionTypes.SIGNUP_START });
 
         try {
             const response = await authService.signup(formData);
+            console.log('AuthContext: Signup API response:', {
+                success: response.data?.success,
+                hasToken: !!response.data?.data?.token,
+                hasUser: !!response.data?.data?.user
+            });
+
+            // Validate response structure
+            if (!response.data?.success || !response.data?.data?.token || !response.data?.data?.user) {
+                throw new Error('Invalid response format from server');
+            }
+
+            const { token, user } = response.data.data;
 
             // Store in localStorage
-            storage.set('token', response.data.token);
-            storage.set('user', response.data.user);
+            storage.set('token', token);
+            storage.set('user', user);
+            console.log('AuthContext: Successfully stored token and user in localStorage');
 
             dispatch({
                 type: ActionTypes.SIGNUP_SUCCESS,
-                payload: response.data,
+                payload: { token, user },
             });
+            console.log('AuthContext: Successfully dispatched SIGNUP_SUCCESS');
 
             return response;
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Signup failed';
+            console.error('AuthContext: Signup error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Signup failed';
             dispatch({
                 type: ActionTypes.SIGNUP_FAILURE,
                 payload: errorMessage,
@@ -180,13 +247,21 @@ export const AuthProvider = ({ children }) => {
 
     // Logout function
     const logout = () => {
-        authService.logout();
+        console.log('AuthContext: Logging out user');
+
+        // Clear localStorage using storage utility
+        storage.remove('token');
+        storage.remove('user');
+
         dispatch({ type: ActionTypes.LOGOUT });
     };
 
     // Clear error function
     const clearError = () => {
-        dispatch({ type: ActionTypes.CLEAR_ERROR });
+        // Only dispatch if there's actually an error to clear
+        if (state.error) {
+            dispatch({ type: ActionTypes.CLEAR_ERROR });
+        }
     };
 
     // Update wallet balance
