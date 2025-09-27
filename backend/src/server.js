@@ -27,18 +27,55 @@ connectDB();
 
 const app = express();
 
-// CORS - Must be first to handle preflight requests
+// CORS - Enhanced configuration for Vercel deployment
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? [
-            'https://mini-financial-trading-app.vercel.app',
-            'https://mini-financial-trading-app-git-main.vercel.app',
-            /^https:\/\/.*\.vercel\.app$/
-        ]
-        : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = process.env.NODE_ENV === 'production'
+            ? [
+                'https://mini-financial-trading-app.vercel.app',
+                'https://mini-financial-trading-app-git-main.vercel.app',
+                // Allow any Vercel preview deployments
+                /^https:\/\/mini-financial-trading-app.*\.vercel\.app$/,
+                // Allow any subdomain of vercel.app for your project
+                /^https:\/\/.*-manisth7991\.vercel\.app$/
+            ]
+            : [
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+                'http://localhost:3001' // Additional dev port
+            ];
+
+        // Check if origin is allowed
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (typeof allowed === 'string') {
+                return allowed === origin;
+            }
+            return allowed.test(origin);
+        });
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'x-auth-token',
+        'Accept',
+        'Origin',
+        'User-Agent'
+    ],
+    // Handle preflight requests
+    preflightContinue: false,
+    optionsSuccessStatus: 200
 }));
 
 // Security middleware
@@ -101,24 +138,21 @@ app.use('/api/*', (req, res) => {
     });
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../../frontend/build')));
-
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../../frontend/build', 'index.html'));
-    });
-}
+// Production configuration - Backend only (frontend deployed separately on Vercel)
+// No static file serving needed as frontend is deployed separately
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
+// Start server - Use process.env.PORT for deployment platforms (Render, Heroku, etc.)
 const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`Server listening on http://localhost:${PORT}`);
-    console.log(`API available at http://localhost:${PORT}/api`);
+    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`🌐 Server listening on http://0.0.0.0:${PORT}`);
+    console.log(`📡 API available at http://0.0.0.0:${PORT}/api`);
+    console.log(`💾 Database: ${process.env.MONGODB_URI ? 'Connected' : 'Not configured'}`);
+    console.log(`🔐 JWT Secret: ${process.env.JWT_SECRET ? 'Configured' : 'Not configured'}`);
 });
 
 // Handle unhandled promise rejections

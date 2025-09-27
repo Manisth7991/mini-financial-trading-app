@@ -3,12 +3,13 @@ import { storage } from '../utils/helpers';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://mini-financial-trading-app-backend.onrender.com/api';
 
-// Create axios instance with default config
+// Create axios instance with enhanced config for admin operations
 const adminApi = axios.create({
     baseURL: `${API_URL}/admin`,
-    timeout: 30000, // Increased timeout for Render cold starts
+    timeout: 60000, // 60 seconds timeout for admin operations and cold starts
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
 });
 

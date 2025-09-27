@@ -1,10 +1,14 @@
 import axios from 'axios';
 import { storage } from '../utils/helpers';
 
-// Create axios instance
+// Create axios instance with enhanced configuration for deployment
 const api = axios.create({
     baseURL: process.env.REACT_APP_API_URL || 'https://mini-financial-trading-app-backend.onrender.com/api',
-    timeout: 30000, // Increased timeout for Render cold starts
+    timeout: 60000, // 60 seconds timeout for Render cold starts and slow operations
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 });
 
 // Request interceptor to add auth token
