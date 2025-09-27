@@ -15,6 +15,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
+import Watchlist from './pages/Watchlist';
 import ClearTokens from './pages/ClearTokens';
 
 // Layouts
@@ -110,6 +111,16 @@ function App() {
                                 <ProtectedRoute>
                                     <AppLayout>
                                         <ProductDetail />
+                                    </AppLayout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/watchlist"
+                            element={
+                                <ProtectedRoute>
+                                    <AppLayout>
+                                        <Watchlist />
                                     </AppLayout>
                                 </ProtectedRoute>
                             }
