@@ -20,6 +20,7 @@ const productRoutes = require('./routes/products');
 const transactionRoutes = require('./routes/transactions');
 const portfolioRoutes = require('./routes/portfolio');
 const watchlistRoutes = require('./routes/watchlist');
+const adminRoutes = require('./routes/admin');
 
 // Connect to database
 connectDB();
@@ -76,6 +77,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

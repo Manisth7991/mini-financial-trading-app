@@ -1,13 +1,14 @@
 const express = require('express');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../utils/helpers');
+const { cacheMiddleware } = require('../middleware/cache');
 
 const router = express.Router();
 
 // @route   GET /api/products
 // @desc    Get all products
 // @access  Public
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', cacheMiddleware('products', 300), asyncHandler(async (req, res) => {
     const { category, search, sort = 'name', limit = 10, page = 1 } = req.query;
 
     // Build query

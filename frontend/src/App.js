@@ -16,6 +16,7 @@ import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
 import Watchlist from './pages/Watchlist';
+import AdminDashboard from './pages/AdminDashboard';
 import ClearTokens from './pages/ClearTokens';
 
 // Layouts
@@ -121,6 +122,16 @@ function App() {
                                 <ProtectedRoute>
                                     <AppLayout>
                                         <Watchlist />
+                                    </AppLayout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin"
+                            element={
+                                <ProtectedRoute>
+                                    <AppLayout>
+                                        <AdminDashboard />
                                     </AppLayout>
                                 </ProtectedRoute>
                             }

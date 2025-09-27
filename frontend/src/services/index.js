@@ -140,3 +140,6 @@ export const watchlistService = {
         return response.data;
     },
 };
+
+// Admin service
+export { default as adminService } from './adminService';

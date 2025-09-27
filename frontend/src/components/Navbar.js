@@ -7,7 +7,8 @@ import {
     Heart,
     LogOut,
     User,
-    Wallet
+    Wallet,
+    Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/helpers';
@@ -27,6 +28,7 @@ const Navbar = () => {
         { path: '/products', label: 'Products', icon: TrendingUp },
         { path: '/portfolio', label: 'Portfolio', icon: Briefcase },
         { path: '/watchlist', label: 'Watchlist', icon: Heart },
+        ...(user?.role === 'admin' ? [{ path: '/admin', label: 'Admin', icon: Shield }] : []),
     ];
 
     return (

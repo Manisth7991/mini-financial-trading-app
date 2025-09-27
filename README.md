@@ -380,6 +380,38 @@ DELETE /watchlist/remove/:productId
 Authorization: Bearer <token>
 ```
 
+### Admin Endpoints (Admin Only)
+
+#### Get Admin Dashboard
+```http
+GET /admin/dashboard
+Authorization: Bearer <admin_token>
+```
+
+#### Get All Users
+```http
+GET /admin/users?page=1&limit=10&search=john&role=user
+Authorization: Bearer <admin_token>
+```
+
+#### Get All Transactions
+```http
+GET /admin/transactions?page=1&limit=20&type=buy&userId=user_id
+Authorization: Bearer <admin_token>
+```
+
+#### Update User Role
+```http
+PUT /admin/users/:id/role
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+Body:
+{
+  "role": "admin"
+}
+```
+
 ## 🔑 Demo Credentials
 
 ### Regular User Account
@@ -390,6 +422,7 @@ Authorization: Bearer <token>
 ### Admin Account
 - **Email**: `admin@tradepro.com`
 - **Password**: `admin123`
+- **Features**: User management, transaction monitoring, platform analytics
 - **Initial Balance**: ₹10,00,000
 
 ## 🎯 Usage Guide
