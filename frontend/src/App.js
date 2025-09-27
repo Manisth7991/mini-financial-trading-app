@@ -17,7 +17,6 @@ import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
 import Watchlist from './pages/Watchlist';
 import AdminDashboard from './pages/AdminDashboard';
-import ClearTokens from './pages/ClearTokens';
 
 // Layouts
 const AuthLayout = ({ children }) => (
@@ -73,14 +72,6 @@ function App() {
                             element={
                                 <AuthLayout>
                                     <Signup />
-                                </AuthLayout>
-                            }
-                        />
-                        <Route
-                            path="/clear-tokens"
-                            element={
-                                <AuthLayout>
-                                    <ClearTokens />
                                 </AuthLayout>
                             }
                         />
