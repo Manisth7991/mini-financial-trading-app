@@ -32,10 +32,16 @@ const Signup = () => {
     // Redirect to login if signup is successful
     useEffect(() => {
         if (signupSuccess && !loading) {
-            console.log('Signup.js: Account created successfully, redirecting to login');
-            navigate('/login', { replace: true });
+            console.log('Signup.js: Account created successfully, redirecting to login with user email');
+            navigate('/login', {
+                replace: true,
+                state: {
+                    email: formData.email,
+                    fromSignup: true
+                }
+            });
         }
-    }, [signupSuccess, loading, navigate]);
+    }, [signupSuccess, loading, navigate, formData.email]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

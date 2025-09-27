@@ -10,7 +10,7 @@ const Login = () => {
     const { login, loading, clearError, isAuthenticated } = useAuth();
 
     const [formData, setFormData] = useState({
-        email: '',
+        email: location.state?.email || '',
         password: '',
     });
     const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +29,16 @@ const Login = () => {
             navigate(from, { replace: true });
         }
     }, [isAuthenticated, loading, navigate, from, isLoggingIn]);
+
+    // Focus password field if email is pre-filled from signup
+    useEffect(() => {
+        if (location.state?.fromSignup && location.state?.email) {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.focus();
+            }
+        }
+    }, [location.state]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -77,15 +87,21 @@ const Login = () => {
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         Sign in to your account
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Or{' '}
-                        <Link
-                            to="/signup"
-                            className="font-medium text-primary-600 hover:text-primary-500"
-                        >
-                            create a new account
-                        </Link>
-                    </p>
+                    {location.state?.fromSignup ? (
+                        <p className="mt-2 text-center text-sm text-green-600 bg-green-50 py-2 px-3 rounded-lg">
+                            Account created successfully! Please sign in with your credentials.
+                        </p>
+                    ) : (
+                        <p className="mt-2 text-center text-sm text-gray-600">
+                            Or{' '}
+                            <Link
+                                to="/signup"
+                                className="font-medium text-primary-600 hover:text-primary-500"
+                            >
+                                create a new account
+                            </Link>
+                        </p>
+                    )}
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -159,14 +175,16 @@ const Login = () => {
                         </button>
                     </div>
 
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600">
-                            Demo credentials:
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Email: demo@example.com | Password: demo123
-                        </p>
-                    </div>
+                    {!location.state?.fromSignup && (
+                        <div className="text-center">
+                            <p className="text-sm text-gray-600">
+                                Demo credentials:
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Email: demo@example.com | Password: demo123
+                            </p>
+                        </div>
+                    )}
                 </form>
             </div>
         </div>
