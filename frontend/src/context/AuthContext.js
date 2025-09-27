@@ -241,9 +241,8 @@ export const AuthProvider = ({ children }) => {
                 throw new Error('Invalid response format from server');
             }
 
-            const { token, user } = response.data.data;
-
-            // Don't store in localStorage - user needs to login after signup
+            // Note: token and user are available in response but not stored
+            // User needs to login after signup for security
             console.log('AuthContext: Account created successfully, user needs to login');
 
             dispatch({

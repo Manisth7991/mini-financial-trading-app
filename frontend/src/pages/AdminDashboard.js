@@ -5,10 +5,8 @@ import {
     Activity,
     DollarSign,
     Package,
-    TrendingUp,
     Eye,
-    Shield,
-    Calendar
+    Shield
 } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { formatCurrency, formatDateTime } from '../utils/helpers';
